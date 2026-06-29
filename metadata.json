@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Snubak Foods OG",
+  "description": "High-end, highly interactive web experience for a restaurant called Snubak Foods featuring a custom chef\u0027s knife navigation bar.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
