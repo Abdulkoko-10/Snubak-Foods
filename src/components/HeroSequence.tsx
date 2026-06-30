@@ -6,11 +6,6 @@ import { useGSAP } from '@gsap/react';
 gsap.registerPlugin(ScrollTrigger);
 
 const frameCount = 193;
-const currentFrame = (index: number) => {
-  const i = index + 1;
-  const num = i.toString().padStart(3, '0');
-  return `/frames/ezgif-frame-${num}.jpg`;
-};
 
 export default function HeroSequence() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -29,13 +24,32 @@ export default function HeroSequence() {
     // Preload images
     const images: HTMLImageElement[] = [];
     let loadedCount = 0;
+    
     for (let i = 0; i < frameCount; i++) {
       const img = new Image();
+      const num = (i + 1).toString().padStart(3, '0');
+      
+      // Local path (what was previously used)
+      const localSrc = `/frames/ezgif-frame-${num}.jpg`;
+      
+      // GitHub fallback path: frames 1-96 use '-', 97-193 use '_'
+      const separator = (i + 1) >= 97 ? '_' : '-';
+      const githubSrc = `https://raw.githubusercontent.com/Abdulkoko-10/Snubak-Foods/main/public/frames/ezgif-frame${separator}${num}.jpg`;
+
       img.onload = () => {
         loadedCount++;
         if (i === 0) render(); // render first frame when it loads
       };
-      img.src = currentFrame(i);
+      
+      let retried = false;
+      img.onerror = () => {
+        if (!retried) {
+          retried = true;
+          img.src = githubSrc; // Fallback to GitHub image
+        }
+      };
+
+      img.src = localSrc;
       images.push(img);
     }
     imagesRef.current = images;
@@ -132,9 +146,10 @@ export default function HeroSequence() {
 
     // PHASE 4: The Finale & CTA (80% to 100%)
     // Effect: Elegant rise-up, revealing the final call to action
+    // Finishes at 90, so from 90 to 100 it stays fully visible for the user to interact
     tl.fromTo(text4Ref.current,
       { opacity: 0, y: 60, scale: 0.95 },
-      { opacity: 1, y: 0, scale: 1, duration: 20, ease: 'power2.out' },
+      { opacity: 1, y: 0, scale: 1, duration: 10, ease: 'power2.out' },
       80
     );
 

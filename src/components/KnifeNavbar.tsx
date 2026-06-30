@@ -2,15 +2,20 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChefHat, ConciergeBell, UtensilsCrossed, Leaf, ClipboardList, Mail, Menu as MenuIcon, X } from 'lucide-react';
 
-const links = [
-  { name: 'Menu', href: '#', icon: ConciergeBell },
-  { name: 'Recipes', href: '#', icon: UtensilsCrossed },
-  { name: 'About', href: '#', icon: Leaf },
-  { name: 'Events', href: '#', icon: ClipboardList },
-  { name: 'Contact', href: '#', icon: Mail }
+export const categories = [
+  { name: 'All', icon: Leaf },
+  { name: 'Local Classics', icon: ConciergeBell },
+  { name: 'Mains & Bites', icon: UtensilsCrossed },
+  { name: 'Pastries & Snacks', icon: ClipboardList },
+  { name: 'Chillers & Drinks', icon: Mail }
 ];
 
-export default function KnifeNavbar() {
+interface KnifeNavbarProps {
+  activeCategory: string;
+  setActiveCategory: (category: string) => void;
+}
+
+export default function KnifeNavbar({ activeCategory, setActiveCategory }: KnifeNavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -65,18 +70,18 @@ export default function KnifeNavbar() {
           </div>
 
           {/* HOME Active Block */}
-          <div className="h-[56px] w-[92px] bg-gradient-to-b from-[#FFFFFF] to-[#FAF8F5] rounded-[18px] shadow-[0_3px_8px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,1)] border border-[#EAE6DD] flex flex-col items-center justify-center relative mr-8 group cursor-pointer transition-transform hover:scale-[1.02]">
-               <span className="text-[#3A2A20] font-bold tracking-[0.25em] text-[9px] mt-1 group-hover:text-[#9A8775] transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)]">HOME</span>
+          <button onClick={() => setActiveCategory('All')} className="h-[56px] w-[92px] bg-gradient-to-b from-[#FFFFFF] to-[#FAF8F5] rounded-[18px] shadow-[0_3px_8px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,1)] border border-[#EAE6DD] flex flex-col items-center justify-center relative mr-8 group cursor-pointer transition-transform hover:scale-[1.02] outline-none">
+               <span className={`font-bold tracking-[0.25em] text-[9px] mt-1 transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === 'All' ? 'text-[#b48e65]' : 'text-[#3A2A20] group-hover:text-[#9A8775]'}`}>HOME</span>
                <div className="w-5 h-[1.5px] bg-gradient-to-r from-[#D4BA9E] to-[#B3997D] rounded-full mt-2.5"></div>
-          </div>
+          </button>
 
           {/* Link group */}
           <div className="flex items-center space-x-10 h-full px-2">
-              {links.map(link => (
-                  <a key={link.name} href={link.href} className="flex flex-col items-center justify-center group w-14 h-full relative">
-                      <link.icon className="w-[20px] h-[20px] text-[#7A6A5E] stroke-[1.2] mb-2.5 group-hover:text-[#9A8775] transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)]" />
-                      <span className="text-[#3A2A20] font-bold tracking-[0.2em] text-[8px] uppercase group-hover:text-[#9A8775] transition-colors whitespace-nowrap drop-shadow-[0_1px_0_rgba(255,255,255,1)]">{link.name}</span>
-                  </a>
+              {categories.slice(1).map(category => (
+                  <button key={category.name} onClick={() => setActiveCategory(category.name)} className="flex flex-col items-center justify-center group w-14 h-full relative outline-none">
+                      <category.icon className={`w-[20px] h-[20px] stroke-[1.2] mb-2.5 transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === category.name ? 'text-[#b48e65]' : 'text-[#7A6A5E] group-hover:text-[#9A8775]'}`} />
+                      <span className={`font-bold tracking-[0.2em] text-[8px] uppercase transition-colors whitespace-nowrap drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === category.name ? 'text-[#b48e65]' : 'text-[#3A2A20] group-hover:text-[#9A8775]'}`}>{category.name}</span>
+                  </button>
               ))}
           </div>
         </div>
@@ -187,18 +192,18 @@ export default function KnifeNavbar() {
                       </div>
 
                       {/* HOME Active Block */}
-                      <div className="w-[74px] h-[74px] bg-gradient-to-r from-[#FFFFFF] to-[#FAF8F5] rounded-[18px] shadow-[3px_0_8px_rgba(0,0,0,0.06),inset_1px_0_2px_rgba(255,255,255,1)] border border-[#EAE6DD] flex flex-col items-center justify-center relative mb-8 group cursor-pointer transition-transform hover:scale-[1.02]">
-                           <span className="text-[#3A2A20] font-bold tracking-[0.25em] text-[9px] mt-2 group-hover:text-[#9A8775] transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)]">HOME</span>
+                      <button onClick={() => { setActiveCategory('All'); setIsOpen(false); }} className="w-[74px] h-[74px] bg-gradient-to-r from-[#FFFFFF] to-[#FAF8F5] rounded-[18px] shadow-[3px_0_8px_rgba(0,0,0,0.06),inset_1px_0_2px_rgba(255,255,255,1)] border border-[#EAE6DD] flex flex-col items-center justify-center relative mb-8 group cursor-pointer transition-transform hover:scale-[1.02] outline-none">
+                           <span className={`font-bold tracking-[0.25em] text-[9px] mt-2 transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === 'All' ? 'text-[#b48e65]' : 'text-[#3A2A20] group-hover:text-[#9A8775]'}`}>HOME</span>
                            <div className="w-5 h-[1.5px] bg-gradient-to-b from-[#D4BA9E] to-[#B3997D] rounded-full mt-3"></div>
-                      </div>
+                      </button>
 
                       {/* Links */}
                       <div className="flex flex-col items-center space-y-10 w-full pb-8">
-                         {links.map((link) => (
-                            <a key={link.name} href={link.href} onClick={() => setIsOpen(false)} className="flex flex-col items-center justify-center group w-full relative">
-                               <link.icon className="w-[22px] h-[22px] text-[#7A6A5E] stroke-[1.2] mb-3 group-hover:text-[#9A8775] transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)]" />
-                               <span className="text-[#3A2A20] font-bold tracking-[0.2em] text-[8px] uppercase group-hover:text-[#9A8775] transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)]">{link.name}</span>
-                            </a>
+                         {categories.slice(1).map((category) => (
+                            <button key={category.name} onClick={() => { setActiveCategory(category.name); setIsOpen(false); }} className="flex flex-col items-center justify-center group w-full relative outline-none">
+                               <category.icon className={`w-[22px] h-[22px] stroke-[1.2] mb-3 transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === category.name ? 'text-[#b48e65]' : 'text-[#7A6A5E] group-hover:text-[#9A8775]'}`} />
+                               <span className={`font-bold tracking-[0.2em] text-[8px] uppercase transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === category.name ? 'text-[#b48e65]' : 'text-[#3A2A20] group-hover:text-[#9A8775]'}`}>{category.name}</span>
+                            </button>
                          ))}
                       </div>
                   </div>
