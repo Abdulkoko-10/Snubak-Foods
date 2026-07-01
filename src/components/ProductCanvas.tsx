@@ -6,8 +6,9 @@ import { useGSAP } from '@gsap/react';
 gsap.registerPlugin(ScrollTrigger);
 
 interface ProductCanvasProps {
-  folderPath: string;
-  baseName: string;
+  folderPath?: string;
+  baseName?: string;
+  fullPathBase?: string;
   frameCount: number;
   scrollTriggerEnd?: string;
   containerHeight?: string;
@@ -20,9 +21,10 @@ export interface ProductCanvasRef {
   timeline: gsap.core.Timeline | null;
 }
 
-const ProductCanvas = forwardRef<ProductCanvasRef, ProductCanvasProps>(({
+const ProductCanvas = forwardRef<ProductCanvasRef, ProductCanvasProps & { fullPathBase?: string }>(({
   folderPath,
   baseName,
+  fullPathBase,
   frameCount,
   scrollTriggerEnd = 'bottom bottom',
   containerHeight = '500vh',
@@ -51,8 +53,12 @@ const ProductCanvas = forwardRef<ProductCanvasRef, ProductCanvasProps>(({
       const img = new Image();
       const num = (i + 1).toString().padStart(3, '0');
       
-      const localSrc = `/${folderPath}/${baseName}${num}.jpg`;
-      const githubSrc = `https://raw.githubusercontent.com/Abdulkoko-10/Snubak-Foods/main/public/${folderPath}/${baseName}${num}.jpg`;
+      const localPath = fullPathBase ? `${fullPathBase}${num}.jpg` : `/${folderPath}/${baseName}${num}.jpg`;
+      const localSrc = localPath;
+      // Fallback to GitHub raw content if local images are missing (e.g. after deletion)
+      const githubSrc = fullPathBase 
+        ? `https://raw.githubusercontent.com/Abdulkoko-10/Snubak-Foods/main/public${localPath}`
+        : `https://raw.githubusercontent.com/Abdulkoko-10/Snubak-Foods/main/public/${folderPath}/${baseName}${num}.jpg`;
 
       img.onload = () => {
         loadedCount++;
@@ -134,7 +140,14 @@ const ProductCanvas = forwardRef<ProductCanvasRef, ProductCanvasProps>(({
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      ScrollTrigger.getAll().forEach(t => t.kill());
+      if (tl.scrollTrigger) {
+        tl.scrollTrigger.kill();
+      }
+      tl.kill();
+      if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
     };
   }, { scope: containerRef, dependencies: [frameCount, scrollTriggerEnd, sequenceDuration] });
 

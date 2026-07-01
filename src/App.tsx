@@ -9,6 +9,12 @@ import HeroSequence from './components/HeroSequence';
 import FallingFoliage from './components/FallingFoliage';
 import ShawarmaShowcase from './components/ShawarmaShowcase';
 import ShawarmaTransition from './components/ShawarmaTransition';
+import ProductCanvas from './components/ProductCanvas';
+import PopcornOverlay from './components/PopcornOverlay';
+import IceCreamOverlay from './components/IceCreamOverlay';
+import MasaOverlay from './components/MasaOverlay';
+import LanguageToggle from './components/LanguageToggle';
+import { useLanguage } from './context/LanguageContext';
 import { gsap } from 'gsap';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -18,6 +24,8 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState('All');
+  const [activeProduct, setActiveProduct] = useState('shawarma'); // 'shawarma' or 'popcorn'
+  const { t } = useLanguage();
 
   const appRef = useRef<HTMLDivElement>(null);
   const discoverRef = useRef<HTMLElement>(null);
@@ -36,15 +44,19 @@ export default function App() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         break;
       case 'Local Classics':
+      case 'Abincin Gargajiya':
         targetRef = localClassicsRef.current;
         break;
       case 'Mains & Bites':
+      case 'Kananan & Manyan Abinci':
         targetRef = mainsBitesRef.current;
         break;
       case 'Pastries & Snacks':
+      case 'Wainar & Kananan Abinci':
         targetRef = pastriesRef.current;
         break;
       case 'Chillers & Drinks':
+      case 'Abubuwan Sha':
         targetRef = chillersRef.current;
         break;
     }
@@ -107,7 +119,13 @@ export default function App() {
 
   return (
     <div ref={appRef} className="min-h-screen bg-[#f5f4ef] font-sans text-[#3e2723]">
-      <KnifeNavbar activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
+      <LanguageToggle />
+      <KnifeNavbar 
+        activeCategory={activeCategory} 
+        setActiveCategory={setActiveCategory} 
+        activeProduct={activeProduct}
+        setActiveProduct={setActiveProduct}
+      />
       
       <HeroSequence />
       
@@ -116,34 +134,84 @@ export default function App() {
         <FallingFoliage />
         <main className="py-48 px-8 max-w-5xl mx-auto flex flex-col items-center text-center relative z-20">
           <h2 ref={headingRef} className="text-4xl md:text-5xl font-serif font-bold text-[#2a170a] mb-6 tracking-tight fade-in-element opacity-0">
-            Discover The Taste
+            {t('discoverTitle')}
           </h2>
           <p ref={textRef} className="text-lg md:text-xl text-[#5c4033] font-light max-w-2xl leading-relaxed fade-in-element opacity-0">
-            Scroll down to see more of our delicious offerings and experience culinary excellence like never before.
+            {t('discoverText')}
           </p>
         </main>
       </section>
 
       {/* Placeholders for Local Classics */}
-      <section ref={localClassicsRef} className="w-full bg-[#f5f4ef] min-h-[50vh] flex items-center justify-center border-t border-[#e8e6df]">
-         {/* Future Local Classics Content */}
-         <p className="text-[#a69382] font-serif text-xl opacity-50 tracking-widest uppercase">Local Classics Coming Soon</p>
+      <section ref={localClassicsRef} className="w-full bg-[#f5f4ef]" id="local-classics-viewer">
+         {activeProduct === 'masa' ? (
+           <div key="masa-view">
+              <ProductCanvas
+                fullPathBase="/masa/masa_"
+                frameCount={101}
+                containerHeight="400vh"
+                sequenceDuration={100}
+              >
+                <MasaOverlay />
+              </ProductCanvas>
+           </div>
+         ) : (
+           <div className="min-h-[50vh] flex items-center justify-center border-t border-[#e8e6df]">
+             <p className="text-[#a69382] font-serif text-xl opacity-50 tracking-widest uppercase">{t('localClassicsSoon')}</p>
+           </div>
+         )}
       </section>
 
-      {/* Mains & Bites (Contains Shawarma) */}
-      <section ref={mainsBitesRef} className="w-full bg-[#f5f4ef]">
-        <ShawarmaTransition />
-        <ShawarmaShowcase />
+      {/* Generic Product Viewer Area */}
+      <section ref={mainsBitesRef} className="w-full bg-[#f5f4ef]" id="product-viewer">
+        <div id="shawarma">
+          {/* We use a key so unmounting and remounting happens cleanly and kills triggers */}
+          {activeProduct === 'shawarma' && (
+            <div key="shawarma-view">
+              <ShawarmaTransition />
+              <ShawarmaShowcase />
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Placeholders for Pastries & Chillers */}
-      <section ref={pastriesRef} className="w-full bg-[#f5f4ef] min-h-[50vh] flex items-center justify-center border-t border-[#e8e6df]">
-        {/* Future Pastries Content */}
-         <p className="text-[#a69382] font-serif text-xl opacity-50 tracking-widest uppercase">Pastries Coming Soon</p>
+      <section ref={pastriesRef} className="w-full bg-[#f5f4ef]" id="pastries-viewer">
+         {activeProduct === 'popcorn' ? (
+           <div key="popcorn-view">
+              {/* ProductCanvas configured for Popcorn */}
+              <ProductCanvas
+                fullPathBase="/popcorn/popcorn_"
+                frameCount={101}
+                containerHeight="400vh"
+                sequenceDuration={100}
+              >
+                <PopcornOverlay />
+              </ProductCanvas>
+           </div>
+         ) : (
+           <div className="min-h-[50vh] flex items-center justify-center border-t border-[#e8e6df]">
+             <p className="text-[#a69382] font-serif text-xl opacity-50 tracking-widest uppercase">{t('pastriesSoon')}</p>
+           </div>
+         )}
       </section>
-      <section ref={chillersRef} className="w-full bg-[#f5f4ef] min-h-[50vh] flex items-center justify-center border-t border-[#e8e6df]">
-        {/* Future Chillers Content */}
-         <p className="text-[#a69382] font-serif text-xl opacity-50 tracking-widest uppercase">Chillers Coming Soon</p>
+      <section ref={chillersRef} className="w-full bg-[#f5f4ef]" id="chillers-viewer">
+         {activeProduct === 'icecream' ? (
+           <div key="icecream-view">
+              <ProductCanvas
+                fullPathBase="/icecream/icecream_"
+                frameCount={80}
+                containerHeight="400vh"
+                sequenceDuration={100}
+              >
+                <IceCreamOverlay />
+              </ProductCanvas>
+           </div>
+         ) : (
+           <div className="min-h-[50vh] flex items-center justify-center border-t border-[#e8e6df]">
+             <p className="text-[#a69382] font-serif text-xl opacity-50 tracking-widest uppercase">{t('chillersSoon')}</p>
+           </div>
+         )}
       </section>
 
     </div>

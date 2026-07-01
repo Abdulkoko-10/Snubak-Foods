@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
+import { useLanguage } from '../context/LanguageContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -10,6 +11,7 @@ const frameCount = 193;
 export default function HeroSequence() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
   
   // Refs for the multi-phase text sequence
   const text1Ref = useRef<HTMLDivElement>(null);
@@ -168,39 +170,42 @@ export default function HeroSequence() {
         />
         
         {/* PHASE 1: The Intro */}
-        <div ref={text1Ref} className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-6 text-center will-change-transform mix-blend-screen">
-          <h1 className="text-6xl md:text-8xl font-serif font-bold text-[#b48e65] mb-6 tracking-tight" style={{ textShadow: '0 4px 30px rgba(180,142,101,0.3)' }}>
+        <div ref={text1Ref} className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-6 text-center will-change-transform">
+          <h1 className="text-6xl md:text-8xl font-serif font-bold text-[#b48e65] mb-6 tracking-tight mix-blend-screen" style={{ textShadow: '0 4px 30px rgba(180,142,101,0.3)' }}>
             Snubak Foods
           </h1>
-          <p className="text-xl md:text-2xl text-stone-200 font-light max-w-2xl leading-relaxed drop-shadow-md">
-            Culinary precision meets natural ingredients. Experience our curated selection of artisanal dishes.
+          <p 
+            className="text-xl md:text-2xl text-white font-medium max-w-2xl leading-relaxed"
+            style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.8)' }}
+          >
+            {t('heroSubtitle')}
           </p>
         </div>
 
         {/* PHASE 2: The Smoke / Atmosphere */}
         <div ref={text2Ref} className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-6 text-center will-change-transform mix-blend-overlay opacity-0">
           <h2 className="text-4xl md:text-6xl font-serif text-white uppercase opacity-90 drop-shadow-2xl font-medium">
-            Immersed in Flavor
+            {t('heroPhase2')}
           </h2>
         </div>
 
         {/* PHASE 3: The Assembly */}
         <div ref={text3Ref} className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-6 text-center will-change-transform opacity-0">
           <h2 className="text-5xl md:text-7xl font-serif text-stone-100 mb-4 drop-shadow-2xl">
-            Artisanal Mastery
+            {t('heroPhase3Title')}
           </h2>
           <p className="text-xl md:text-2xl text-[#b48e65] font-light italic drop-shadow-md">
-            Down to the last grain.
+            {t('heroPhase3Desc')}
           </p>
         </div>
 
         {/* PHASE 4: The Finale */}
         <div ref={text4Ref} className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-6 text-center will-change-transform opacity-0">
           <h2 className="text-5xl md:text-7xl font-serif font-bold text-[#b48e65] mb-10 drop-shadow-2xl">
-            Savor the Extraordinary
+            {t('heroPhase4')}
           </h2>
           <button className="px-10 py-4 bg-[#b48e65] hover:bg-[#a37c53] text-white font-medium tracking-wide rounded-full shadow-2xl transition-colors cursor-pointer pointer-events-auto">
-            View Menu
+            {t('viewMenu')}
           </button>
         </div>
 

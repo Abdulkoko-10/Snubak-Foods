@@ -2,12 +2,14 @@ import { useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
+import { useLanguage } from '../context/LanguageContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function ShawarmaTransition() {
   const containerRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLHeadingElement>(null);
+  const { t } = useLanguage();
 
   useGSAP(() => {
     // Text reveal (camouflaged text popping out)
@@ -79,10 +81,10 @@ export default function ShawarmaTransition() {
           textShadow: '2px 4px 10px rgba(62, 39, 35, 0.15), -1px -1px 2px rgba(255,255,255,0.8)'
         }}
       >
-        Shawarma
+        {t('shawarma')}
       </h2>
       <p className="absolute bottom-1/4 text-[#5c4033] opacity-60 font-medium tracking-[0.3em] text-sm uppercase">
-        Mains & Bites
+        {t('catMainsBites')}
       </p>
     </div>
   );

@@ -1,38 +1,89 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChefHat, ConciergeBell, UtensilsCrossed, Leaf, ClipboardList, Mail, Menu as MenuIcon, X } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export const categories = [
-  { name: 'All', icon: Leaf },
-  { name: 'Local Classics', icon: ConciergeBell },
-  { name: 'Mains & Bites', icon: UtensilsCrossed },
-  { name: 'Pastries & Snacks', icon: ClipboardList },
-  { name: 'Chillers & Drinks', icon: Mail }
+  { name: 'All', langKey: 'catAll', icon: Leaf, subItems: [] },
+  { name: 'Local Classics', langKey: 'catLocalClassics', icon: ConciergeBell, subItems: [{ name: 'Masa', langKey: 'masa', id: 'masa' }] },
+  { name: 'Mains & Bites', langKey: 'catMainsBites', icon: UtensilsCrossed, subItems: [{ name: 'Shawarma', langKey: 'shawarma', id: 'shawarma' }] },
+  { name: 'Pastries & Snacks', langKey: 'catPastriesSnacks', icon: ClipboardList, subItems: [{ name: 'Popcorn', langKey: 'popcorn', id: 'popcorn' }] },
+  { name: 'Chillers & Drinks', langKey: 'catChillersDrinks', icon: Mail, subItems: [{ name: 'Ice Cream', langKey: 'icecream', id: 'icecream' }] }
 ];
 
 interface KnifeNavbarProps {
   activeCategory: string;
   setActiveCategory: (category: string) => void;
+  activeProduct?: string;
+  setActiveProduct?: (product: string) => void;
 }
 
-export default function KnifeNavbar({ activeCategory, setActiveCategory }: KnifeNavbarProps) {
+export default function KnifeNavbar({ activeCategory, setActiveCategory, activeProduct, setActiveProduct }: KnifeNavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+  const [activeSubMenu, setActiveSubMenu] = useState<string | null>(null);
+  const { t } = useLanguage();
+
+  const handleCategoryClick = (categoryName: string) => {
+    setActiveCategory(categoryName);
+    
+    // Toggle subMenu logic
+    const category = categories.find(c => c.name === categoryName);
+    if (category && category.subItems && category.subItems.length > 0) {
+      if (activeSubMenu === categoryName) {
+         // It's already open, but we just clicked the category again. We can leave it or toggle it.
+         // Wait, the prompt says "it first goes to that location then opens up the options"
+      } else {
+         setActiveSubMenu(categoryName);
+      }
+    } else {
+      setActiveSubMenu(null);
+    }
+  };
+
+  const handleSubItemClick = (id: string) => {
+     if (setActiveProduct) {
+       setActiveProduct(id);
+     }
+     // Trigger scrolling to the sub-item or its viewer container
+     setTimeout(() => {
+       const containerId = id === 'popcorn' ? 'pastries-viewer' : (id === 'icecream' ? 'chillers-viewer' : (id === 'masa' ? 'local-classics-viewer' : id));
+       const element = document.getElementById(containerId);
+       if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+       }
+     }, 100);
+     setActiveSubMenu(null);
+     if (isMobile) setIsOpen(false);
+  };
+
 
   useEffect(() => {
     let scrollTimeout: NodeJS.Timeout;
+    let lastScrollY = window.scrollY;
+
     const handleScroll = () => {
       setIsScrolling(true);
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => setIsScrolling(false), 150);
+
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > 100 && currentScrollY > lastScrollY) {
+        setIsHidden(true); // scrolling down
+        setActiveSubMenu(null); // close submenu on hide
+      } else if (currentScrollY < lastScrollY) {
+        setIsHidden(false); // scrolling up
+      }
+      lastScrollY = currentScrollY;
     };
     
     window.addEventListener('scroll', handleScroll, { passive: true });
     
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 860);
-      if (window.innerWidth > 860) setIsOpen(false);
+      setIsMobile(window.innerWidth <= 1024);
+      if (window.innerWidth > 1024) setIsOpen(false);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -48,10 +99,10 @@ export default function KnifeNavbar({ activeCategory, setActiveCategory }: Knife
   if (!isMobile) {
     return (
       <motion.nav
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        initial={{ y: -100, x: "-50%", opacity: 0 }}
+        animate={{ y: isHidden ? -150 : 0, x: "-50%", opacity: isHidden ? 0 : 1 }}
         transition={{ type: 'spring', damping: 22, stiffness: 100 }}
-        className={`fixed top-12 left-1/2 -translate-x-1/2 z-50 flex items-start drop-shadow-[0_20px_25px_rgba(40,30,20,0.15)] h-[72px] group ${isScrolling ? 'animate-blade-vibrate' : ''}`}
+        className={`fixed top-12 left-1/2 z-50 flex items-start drop-shadow-[0_20px_25px_rgba(40,30,20,0.15)] h-[72px] group`}
       >
         {/* BLADE */}
         <div className="h-[72px] bg-gradient-to-b from-[#FEFCF9] via-[#F4EFEA] to-[#E6E1D7] rounded-l-[36px] flex items-center pl-4 pr-8 relative z-10 shadow-[inset_0_2px_6px_rgba(255,255,255,0.9),inset_0_-3px_5px_rgba(0,0,0,0.08),0_4px_10px_rgba(0,0,0,0.05)] border-y border-l border-[#D9D5CB]">
@@ -71,17 +122,40 @@ export default function KnifeNavbar({ activeCategory, setActiveCategory }: Knife
 
           {/* HOME Active Block */}
           <button onClick={() => setActiveCategory('All')} className="h-[56px] w-[92px] bg-gradient-to-b from-[#FFFFFF] to-[#FAF8F5] rounded-[18px] shadow-[0_3px_8px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,1)] border border-[#EAE6DD] flex flex-col items-center justify-center relative mr-8 group cursor-pointer transition-transform hover:scale-[1.02] outline-none">
-               <span className={`font-bold tracking-[0.25em] text-[9px] mt-1 transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === 'All' ? 'text-[#b48e65]' : 'text-[#3A2A20] group-hover:text-[#9A8775]'}`}>HOME</span>
+               <span className={`font-bold tracking-[0.25em] text-[9px] mt-1 transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === 'All' ? 'text-[#b48e65]' : 'text-[#3A2A20] group-hover:text-[#9A8775]'}`}>{t('catAll')}</span>
                <div className="w-5 h-[1.5px] bg-gradient-to-r from-[#D4BA9E] to-[#B3997D] rounded-full mt-2.5"></div>
           </button>
 
           {/* Link group */}
-          <div className="flex items-center space-x-10 h-full px-2">
+          <div className="flex items-center space-x-4 md:space-x-6 lg:space-x-10 h-full px-2">
               {categories.slice(1).map(category => (
-                  <button key={category.name} onClick={() => setActiveCategory(category.name)} className="flex flex-col items-center justify-center group w-14 h-full relative outline-none">
-                      <category.icon className={`w-[20px] h-[20px] stroke-[1.2] mb-2.5 transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === category.name ? 'text-[#b48e65]' : 'text-[#7A6A5E] group-hover:text-[#9A8775]'}`} />
-                      <span className={`font-bold tracking-[0.2em] text-[8px] uppercase transition-colors whitespace-nowrap drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === category.name ? 'text-[#b48e65]' : 'text-[#3A2A20] group-hover:text-[#9A8775]'}`}>{category.name}</span>
-                  </button>
+                  <div key={category.name} className="relative h-full flex flex-col justify-center">
+                    <button onClick={() => handleCategoryClick(category.name)} className="flex flex-col items-center justify-center group px-1 h-full relative outline-none">
+                        <category.icon className={`w-[20px] h-[20px] stroke-[1.2] mb-2.5 transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === category.name ? 'text-[#b48e65]' : 'text-[#7A6A5E] group-hover:text-[#9A8775]'}`} />
+                        <span className={`font-bold tracking-[0.1em] lg:tracking-[0.2em] text-[8px] uppercase transition-colors whitespace-nowrap drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === category.name ? 'text-[#b48e65]' : 'text-[#3A2A20] group-hover:text-[#9A8775]'}`}>{t(category.langKey)}</span>
+                    </button>
+                    {/* Desktop SubMenu */}
+                    <AnimatePresence>
+                      {activeSubMenu === category.name && category.subItems && category.subItems.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          className="absolute top-[80px] left-1/2 -translate-x-1/2 bg-[#FEFCF9] border border-[#D9D5CB] rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-2 min-w-[140px] flex flex-col items-center z-50 before:content-[''] before:absolute before:-top-[6px] before:left-1/2 before:-translate-x-1/2 before:w-3 before:h-3 before:bg-[#FEFCF9] before:border-l before:border-t before:border-[#D9D5CB] before:rotate-45"
+                        >
+                           {category.subItems.map(item => (
+                              <button 
+                                key={item.id} 
+                                onClick={() => handleSubItemClick(item.id)}
+                                className="w-full text-center py-2 px-4 hover:bg-[#F4EFEA] text-[#3A2A20] hover:text-[#b48e65] rounded-lg transition-colors font-serif text-sm relative z-10"
+                              >
+                                {t(item.langKey)}
+                              </button>
+                           ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
               ))}
           </div>
         </div>
@@ -118,7 +192,7 @@ export default function KnifeNavbar({ activeCategory, setActiveCategory }: Knife
         </div>
 
         {/* HANDLE */}
-        <div className="h-[56px] w-[180px] bg-[#422919] rounded-r-[28px] relative z-0 flex items-center justify-end pr-6 shadow-[inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-6px_10px_rgba(0,0,0,0.8),inset_-6px_0_12px_rgba(0,0,0,0.6),0_6px_12px_rgba(0,0,0,0.2)] border-y border-r border-[#1C0D06]">
+        <div className="-ml-[2px] h-[56px] w-[180px] bg-[#422919] rounded-r-[28px] relative z-0 flex items-center justify-end pr-6 shadow-[inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-6px_10px_rgba(0,0,0,0.8),inset_-6px_0_12px_rgba(0,0,0,0.6),0_6px_12px_rgba(0,0,0,0.2)] border-y border-r border-[#1C0D06]">
              {/* Wood base gradients for 3D cylinder shape */}
              <div className="absolute inset-0 rounded-r-[28px] bg-gradient-to-b from-[#6D452B] via-[#4A2F1D] to-[#25130A] opacity-90 pointer-events-none"></div>
              
@@ -193,17 +267,41 @@ export default function KnifeNavbar({ activeCategory, setActiveCategory }: Knife
 
                       {/* HOME Active Block */}
                       <button onClick={() => { setActiveCategory('All'); setIsOpen(false); }} className="w-[74px] h-[74px] bg-gradient-to-r from-[#FFFFFF] to-[#FAF8F5] rounded-[18px] shadow-[3px_0_8px_rgba(0,0,0,0.06),inset_1px_0_2px_rgba(255,255,255,1)] border border-[#EAE6DD] flex flex-col items-center justify-center relative mb-8 group cursor-pointer transition-transform hover:scale-[1.02] outline-none">
-                           <span className={`font-bold tracking-[0.25em] text-[9px] mt-2 transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === 'All' ? 'text-[#b48e65]' : 'text-[#3A2A20] group-hover:text-[#9A8775]'}`}>HOME</span>
+                           <span className={`font-bold tracking-[0.25em] text-[9px] mt-2 transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === 'All' ? 'text-[#b48e65]' : 'text-[#3A2A20] group-hover:text-[#9A8775]'}`}>{t('catAll')}</span>
                            <div className="w-5 h-[1.5px] bg-gradient-to-b from-[#D4BA9E] to-[#B3997D] rounded-full mt-3"></div>
                       </button>
 
                       {/* Links */}
-                      <div className="flex flex-col items-center space-y-10 w-full pb-8">
+                      <div className="flex flex-col items-center space-y-8 w-full pb-8">
                          {categories.slice(1).map((category) => (
-                            <button key={category.name} onClick={() => { setActiveCategory(category.name); setIsOpen(false); }} className="flex flex-col items-center justify-center group w-full relative outline-none">
-                               <category.icon className={`w-[22px] h-[22px] stroke-[1.2] mb-3 transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === category.name ? 'text-[#b48e65]' : 'text-[#7A6A5E] group-hover:text-[#9A8775]'}`} />
-                               <span className={`font-bold tracking-[0.2em] text-[8px] uppercase transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === category.name ? 'text-[#b48e65]' : 'text-[#3A2A20] group-hover:text-[#9A8775]'}`}>{category.name}</span>
-                            </button>
+                            <div key={category.name} className="flex flex-col items-center w-full relative">
+                              <button onClick={() => handleCategoryClick(category.name)} className="flex flex-col items-center justify-center group w-full relative outline-none mb-2">
+                                 <category.icon className={`w-[22px] h-[22px] stroke-[1.2] mb-3 transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === category.name ? 'text-[#b48e65]' : 'text-[#7A6A5E] group-hover:text-[#9A8775]'}`} />
+                                 <span className={`font-bold tracking-[0.2em] text-[8px] uppercase transition-colors drop-shadow-[0_1px_0_rgba(255,255,255,1)] ${activeCategory === category.name ? 'text-[#b48e65]' : 'text-[#3A2A20] group-hover:text-[#9A8775]'}`}>{t(category.langKey)}</span>
+                              </button>
+                              
+                              {/* Mobile SubMenu */}
+                              <AnimatePresence>
+                                {activeSubMenu === category.name && category.subItems && category.subItems.length > 0 && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="overflow-hidden w-[80%] flex flex-col items-center bg-[#F4EFEA]/50 rounded-xl mt-2 border border-[#D9D5CB]/50"
+                                  >
+                                     {category.subItems.map(item => (
+                                        <button 
+                                          key={item.id} 
+                                          onClick={() => handleSubItemClick(item.id)}
+                                          className="w-full text-center py-3 px-2 border-b border-[#D9D5CB]/30 last:border-b-0 text-[#5A4A40] hover:text-[#b48e65] text-xs uppercase tracking-[0.1em] font-medium transition-colors"
+                                        >
+                                          {t(item.langKey)}
+                                        </button>
+                                     ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
                          ))}
                       </div>
                   </div>
@@ -282,11 +380,11 @@ export default function KnifeNavbar({ activeCategory, setActiveCategory }: Knife
       <AnimatePresence>
         {!isOpen && (
           <motion.button
-            initial={{ x: 100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 100, opacity: 0 }}
+            initial={{ x: 100, y: "-50%", opacity: 0 }}
+            animate={{ x: 0, y: "-50%", opacity: 1 }}
+            exit={{ x: 100, y: "-50%", opacity: 0 }}
             onClick={() => setIsOpen(true)}
-            className={`fixed top-1/2 -translate-y-1/2 right-0 z-50 flex items-center drop-shadow-[-8px_12px_20px_rgba(40,30,20,0.25)] group ${isScrolling ? 'animate-blade-vibrate' : ''}`}
+            className={`fixed top-1/2 right-0 z-50 flex items-center drop-shadow-[-8px_12px_20px_rgba(40,30,20,0.25)] group ${isScrolling ? 'animate-blade-vibrate' : ''}`}
           >
              <div className="h-[72px] w-[80px] bg-[#422919] rounded-l-[36px] relative shadow-[inset_0_2px_3px_rgba(255,255,255,0.3),inset_0_-6px_10px_rgba(0,0,0,0.8),inset_4px_0_8px_rgba(0,0,0,0.4),0_4px_12px_rgba(0,0,0,0.3)] flex items-center justify-center pl-2 pr-4 border-y border-l border-[#1C0D06] translate-x-4 group-hover:translate-x-0 transition-transform duration-300 ease-out">
                 {/* Wood base gradients for 3D cylinder shape */}
